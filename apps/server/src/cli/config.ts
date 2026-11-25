@@ -23,7 +23,6 @@ import { Argument, Flag } from "effect/cli";
 import * as CliError from "effect/cli/CliError";
 
 import { readBootstrapEnvelope } from "../bootstrap.ts";
-import { resolveServiceLauncherMode } from "../cloud/serviceLauncherClient.ts";
 import * as ServerConfig from "../config.ts";
 import { expandHomePath, resolveBaseDir } from "../os-jank.ts";
 import { isProcessAlive, readPersistedServerRuntimeState } from "../serverRuntimeState.ts";
@@ -89,7 +88,7 @@ const tailscaleServePortFlag = Flag.Int("tailscale-serve-port").pipe(
 );
 const lanFlag = Flag.Boolean("lan").pipe(
   Flag.withDescription(
-    "Accept connections from your local network and tailnet, not only this machine (equivalent to T3CODE_LAN).",
+    "Accept connections from your local network and tailnet (the default). Pass --no-lan to listen on this machine only (equivalent to T3CODE_LAN).",
   ),
   Flag.optional,
 );
@@ -421,19 +420,11 @@ export const resolveServerConfig = Effect.fn("config.resolveServerConfig")(funct
     Option.fromUndefinedOr(env.host),
     Option.fromUndefinedOr(bootstrap?.host),
   );
-  // Private networks only, so clients learn a LAN address and prefer it over
-  // T3 Connect. `t3 service install` writes T3CODE_LAN=false for a new
-  // service; one installed before T3CODE_LAN existed keeps listening.
+  // Private networks only (LAN and tailnet). This fork has no T3 Connect, so a web
+  // server listens there unless --no-lan or T3CODE_LAN=false says otherwise.
   const lan = resolveOptionPrecedence(normalizedFlags.lan, Option.fromUndefinedOr(env.lan));
   const privateNetworkOnly =
-    Option.isNone(explicitHost) &&
-    mode === "web" &&
-    (Option.isSome(lan)
-      ? lan.value
-      : yield* resolveServiceLauncherMode().pipe(
-          Effect.map((launcher) => launcher.managed),
-          Effect.orElseSucceed(() => false),
-        ));
+    Option.isNone(explicitHost) && mode === "web" && Option.getOrElse(lan, () => true);
   const host = Option.getOrElse(explicitHost, () =>
     privateNetworkOnly ? "0.0.0.0" : mode === "desktop" ? "127.0.0.1" : undefined,
   );

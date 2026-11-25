@@ -5,10 +5,6 @@ import * as NodeURL from "node:url";
 import * as NodeUtil from "node:util";
 
 export interface T3CodePublicConfig {
-  readonly clerkPublishableKey: string | undefined;
-  readonly clerkJwtTemplate: string | undefined;
-  readonly clerkCliOAuthClientId: string | undefined;
-  readonly relayUrl: string | undefined;
   readonly mobileOtlpTracesUrl: string | undefined;
   readonly mobileOtlpTracesDataset: string | undefined;
   readonly mobileOtlpTracesToken: string | undefined;
@@ -21,6 +17,21 @@ type Environment = Readonly<Record<string, string | undefined>>;
 
 const REPO_ROOT = NodePath.resolve(NodeURL.fileURLToPath(import.meta.url), "../../..");
 
+// This fork ships without T3 Connect: no build gets relay or Clerk config, so every
+// surface takes the existing "no cloud config" path.
+const T3_CONNECT_KEYS = [
+  "T3CODE_CLERK_PUBLISHABLE_KEY",
+  "VITE_CLERK_PUBLISHABLE_KEY",
+  "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY",
+  "T3CODE_CLERK_JWT_TEMPLATE",
+  "VITE_CLERK_JWT_TEMPLATE",
+  "EXPO_PUBLIC_CLERK_JWT_TEMPLATE",
+  "T3CODE_CLERK_CLI_OAUTH_CLIENT_ID",
+  "VITE_CLERK_CLI_OAUTH_CLIENT_ID",
+  "T3CODE_RELAY_URL",
+  "VITE_T3CODE_RELAY_URL",
+] as const;
+
 export function loadRepoEnv({
   baseEnv = process.env,
   repoRoot = REPO_ROOT,
@@ -32,36 +43,10 @@ export function loadRepoEnv({
   const localEnv = readEnvFile(NodePath.join(repoRoot, ".env.local"));
   const config = resolvePublicConfig(baseEnv, localEnv, rootEnv);
 
-  return {
+  const env: Record<string, string | undefined> = {
     ...rootEnv,
     ...localEnv,
     ...baseEnv,
-    ...(config.clerkPublishableKey
-      ? {
-          T3CODE_CLERK_PUBLISHABLE_KEY: config.clerkPublishableKey,
-          VITE_CLERK_PUBLISHABLE_KEY: config.clerkPublishableKey,
-          EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: config.clerkPublishableKey,
-        }
-      : {}),
-    ...(config.clerkJwtTemplate
-      ? {
-          T3CODE_CLERK_JWT_TEMPLATE: config.clerkJwtTemplate,
-          VITE_CLERK_JWT_TEMPLATE: config.clerkJwtTemplate,
-          EXPO_PUBLIC_CLERK_JWT_TEMPLATE: config.clerkJwtTemplate,
-        }
-      : {}),
-    ...(config.clerkCliOAuthClientId
-      ? {
-          T3CODE_CLERK_CLI_OAUTH_CLIENT_ID: config.clerkCliOAuthClientId,
-          VITE_CLERK_CLI_OAUTH_CLIENT_ID: config.clerkCliOAuthClientId,
-        }
-      : {}),
-    ...(config.relayUrl
-      ? {
-          T3CODE_RELAY_URL: config.relayUrl,
-          VITE_T3CODE_RELAY_URL: config.relayUrl,
-        }
-      : {}),
     ...(config.mobileOtlpTracesUrl
       ? {
           T3CODE_MOBILE_OTLP_TRACES_URL: config.mobileOtlpTracesUrl,
@@ -99,28 +84,12 @@ export function loadRepoEnv({
         }
       : {}),
   };
+  for (const key of T3_CONNECT_KEYS) delete env[key];
+  return env;
 }
 
 function resolvePublicConfig(...sources: readonly Environment[]): T3CodePublicConfig {
   return {
-    clerkPublishableKey: firstNonEmpty(
-      sources,
-      "T3CODE_CLERK_PUBLISHABLE_KEY",
-      "VITE_CLERK_PUBLISHABLE_KEY",
-      "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY",
-    ),
-    clerkJwtTemplate: firstNonEmpty(
-      sources,
-      "T3CODE_CLERK_JWT_TEMPLATE",
-      "VITE_CLERK_JWT_TEMPLATE",
-      "EXPO_PUBLIC_CLERK_JWT_TEMPLATE",
-    ),
-    clerkCliOAuthClientId: firstNonEmpty(
-      sources,
-      "T3CODE_CLERK_CLI_OAUTH_CLIENT_ID",
-      "VITE_CLERK_CLI_OAUTH_CLIENT_ID",
-    ),
-    relayUrl: firstNonEmpty(sources, "T3CODE_RELAY_URL", "VITE_T3CODE_RELAY_URL"),
     mobileOtlpTracesUrl: firstNonEmpty(
       sources,
       "T3CODE_MOBILE_OTLP_TRACES_URL",

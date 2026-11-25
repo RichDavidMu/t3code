@@ -107,8 +107,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NetService.layer))("service commands
   );
 
   it.effect.each([
-    { label: "a new service", installed: false, env: "", expected: "T3CODE_LAN=false\n" },
-    // Services installed before T3CODE_LAN existed keep listening on the local network.
+    { label: "a new service", installed: false, env: "", expected: "T3CODE_LAN=true\n" },
     { label: "an older service", installed: true, env: "", expected: "" },
     {
       label: "a set host",
@@ -120,9 +119,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NetService.layer))("service commands
       label: "a quoted multiline value",
       installed: false,
       env: 'CUSTOM="first\nT3CODE_LAN=example\nlast"\n',
-      expected: 'CUSTOM="first\nT3CODE_LAN=example\nlast"\nT3CODE_LAN=false\n',
+      expected: 'CUSTOM="first\nT3CODE_LAN=example\nlast"\nT3CODE_LAN=true\n',
     },
-  ])("install keeps $label off the local network only when it is new", (input) =>
+  ])("install opens the local network for $label only when it is new", (input) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "t3-service-cli-test-" });

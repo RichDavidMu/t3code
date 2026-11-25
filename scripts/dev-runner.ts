@@ -382,7 +382,7 @@ export const createDevRunnerEnv = Effect.fn("dev-runner.createDevRunnerEnv")(fun
   }
 
   // Agent shells inherit the parent T3 server's bind settings; only --host widens the dev server.
-  delete output.T3CODE_LAN;
+  output.T3CODE_LAN = "false";
   if (!isDesktopMode && host !== undefined) {
     output.T3CODE_HOST = host;
   } else {

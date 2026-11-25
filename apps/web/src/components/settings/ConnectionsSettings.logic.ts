@@ -1,8 +1,7 @@
-import { thrownErrorMessage } from "@t3tools/client-runtime/errors";
 import * as DateTime from "effect/DateTime";
 import { msg } from "gt-react";
 
-import { resolveDesktopPairingUrl, resolveHostedPairingUrl } from "./pairingUrls";
+import { resolveDesktopPairingUrl } from "./pairingUrls";
 import { getPairingTokenFromUrl, setPairingTokenOnUrl } from "@t3tools/shared/remote";
 import { readHostedPairingRequest } from "../../hostedPairing";
 import { m, type MessageResolver } from "../../i18n/messages";
@@ -301,21 +300,6 @@ export function parseRemotePairingFields(
   return { host, pairingCode };
 }
 
-export function formatDesktopSshConnectionError(
-  error: unknown,
-  resolve: MessageResolver = m,
-): string {
-  const fallback = resolve(msg("Failed to connect SSH host."));
-  const rawMessage =
-    error instanceof Error ? (thrownErrorMessage(error, m) ?? error.message) : fallback;
-  const withoutIpcPrefix = rawMessage.replace(
-    /^Error invoking remote method 'desktop:ensure-ssh-environment':\s*/u,
-    "",
-  );
-  const withoutTaggedErrorPrefix = withoutIpcPrefix.replace(/^Ssh[A-Za-z]+Error:\s*/u, "");
-  return withoutTaggedErrorPrefix.trim() || fallback;
-}
-
 export function sortDesktopPairingLinks(links: ReadonlyArray<ServerPairingLinkRecord>) {
   return [...links].toSorted(
     (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
@@ -440,12 +424,6 @@ export function resolveAdvertisedEndpointPairingUrl(
   endpoint: AdvertisedEndpoint,
   credential: string,
 ): string {
-  if (endpoint.compatibility.hostedHttpsApp === "compatible") {
-    return (
-      resolveHostedPairingUrl(endpoint.httpBaseUrl, credential) ??
-      resolveDesktopPairingUrl(endpoint.httpBaseUrl, credential)
-    );
-  }
   return resolveDesktopPairingUrl(endpoint.httpBaseUrl, credential);
 }
 

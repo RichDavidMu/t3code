@@ -271,13 +271,13 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))
       envAfter: "T3CODE_LAN=false\n",
     },
     {
-      label: "another home's service supplies no local network default",
+      label: "another home's service reads as the server default",
       installed: true,
       status: { current: false, otherBaseDir: "/srv/t3 home" },
       reportStatus: true,
       json: {
         service: { otherBaseDir: "/srv/t3 home" },
-        lan: { enabled: false, inheritedDefault: false },
+        lan: { enabled: true },
       },
       env: "",
       args: ["--json"],
@@ -322,7 +322,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))
       envAfter: "T3CODE_LAN=true\n",
     },
     {
-      label: "the old default is kept",
+      label: "an unset setting reads as on",
       installed: true,
       env: "",
       args: ["--yes"],

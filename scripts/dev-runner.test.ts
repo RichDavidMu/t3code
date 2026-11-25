@@ -191,7 +191,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
       }),
     );
 
-    it.effect("drops an inherited T3CODE_HOST and T3CODE_LAN from a parent T3 server", () =>
+    it.effect("drops an inherited T3CODE_HOST and keeps a dev server off the LAN", () =>
       Effect.gen(function* () {
         const env = yield* createDevRunnerEnv({
           mode: "dev",
@@ -209,7 +209,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
 
         assert.equal(env.T3CODE_PORT, "13773");
         assert.equal(env.T3CODE_HOST, undefined);
-        assert.equal(env.T3CODE_LAN, undefined);
+        assert.equal(env.T3CODE_LAN, "false");
       }),
     );
   });

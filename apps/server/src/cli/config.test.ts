@@ -791,7 +791,8 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
         cwd: process.cwd(),
         baseDir,
         ...derivedPaths,
-        host: undefined,
+        host: "0.0.0.0",
+        privateNetworkOnly: true,
         staticDir: resolved.staticDir,
         devUrl: undefined,
         noBrowser: true,
@@ -900,7 +901,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
         50_123,
       );
       expect(selected).toEqual([
-        [3773, undefined],
+        [3773, "0.0.0.0"],
         [3773, "100.64.0.7"],
       ]);
       expect(yield* resolvePort({ port: Option.some(8788) })).toBe(8788);
@@ -1030,7 +1031,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
       }),
   );
 
-  it.effect("listens on private networks per T3CODE_LAN, else under the service launcher", () =>
+  it.effect("listens on private networks unless T3CODE_LAN or a host says otherwise", () =>
     Effect.gen(function* () {
       const { join } = yield* Path.Path;
       const baseDir = join(NodeOS.tmpdir(), "t3-cli-config-service-host");
@@ -1060,7 +1061,6 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
           }),
         );
 
-      // A service installed before T3CODE_LAN existed.
       expect(yield* resolveHost({ connected: true })).toEqual({
         host: "0.0.0.0",
         privateNetworkOnly: true,
@@ -1078,11 +1078,9 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
         host: "0.0.0.0",
         privateNetworkOnly: true,
       });
-      // Without the launcher's IPC channel the context was inherited, e.g. by
-      // `t3 serve` started from an agent inside the service.
       expect(yield* resolveHost({ connected: false })).toEqual({
-        host: undefined,
-        privateNetworkOnly: undefined,
+        host: "0.0.0.0",
+        privateNetworkOnly: true,
       });
     }),
   );

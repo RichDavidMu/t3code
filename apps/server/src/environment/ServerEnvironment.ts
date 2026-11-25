@@ -295,7 +295,7 @@ export const make = Effect.gen(function* () {
       ...(serverSelfUpdate === "boot-service" ? { serverUpdateStaging: true } : {}),
       ...(desktopAppUpdate ? { desktopAppUpdate: true, desktopAppChannelSwitch: true } : {}),
       serverBrowser: true,
-      peerLinks: true,
+      // Linked environments are off in this fork, so clients never offer linking.
       mcpModeLimitHeader: true,
       linkFence: true,
       linkThreadStream: true,

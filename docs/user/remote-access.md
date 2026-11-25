@@ -3,6 +3,12 @@
 Connect a phone, browser, or another desktop app to T3 Code running on a different
 machine. That machine must stay running and reachable while you work.
 
+> **This build** connects only over your local network and Tailscale. T3 Connect,
+> desktop-managed SSH, hosted app.t3.codes pairing links, and linked environments
+> are turned off, so the sections about them below do not apply. Servers, the
+> background service, and the desktop app listen on the local network and tailnet
+> by default; see [Pair over a LAN or private network](#pair-over-a-lan-or-private-network).
+
 ## T3 Connect
 
 T3 Connect makes an environment available to your other devices without setting
@@ -92,19 +98,15 @@ cannot add more until you are under the limit again.
 
 Use direct pairing when the other device can reach the host's network address.
 
-On a desktop host, open **Settings → Sharing & access**, enable **Network access**,
-then create a pairing link using an address the other device can reach. Changing
+On a desktop host, **Network access** in **Settings → Sharing & access** is on by
+default; create a pairing link using an address the other device can reach. Changing
 network access restarts the desktop app. You can turn it off in the same place.
 
-For a command-line host, choose the local network in `t3 up`, or run:
-
-```bash
-t3 up --lan
-```
-
-For a server in a terminal, run `t3 serve --lan`. Either way, T3 Code then
-accepts connections from your local network and tailnet, so a pairing code is
-all that keeps other devices on them out.
+A command-line host does this by default: `t3 serve`, `t3 service install`, and
+`t3 up` all accept connections from your local network and tailnet, so a pairing
+code is all that keeps other devices on them out. To listen on this machine
+only, run `t3 up --no-lan` for the background service or `t3 serve --no-lan` in a
+terminal.
 
 If a server is already running, generate a fresh link without restarting it:
 

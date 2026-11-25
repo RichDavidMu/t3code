@@ -559,13 +559,6 @@ export const SETTINGS_SEARCH_ITEMS = [
     searchTerms: [msg("beta share guest invite link teammate watch t3 connect tunnel")],
   },
   {
-    id: "linked-environments-beta",
-    title: msg("Linked environments"),
-    to: "/settings/labs",
-    scope: "environment",
-    searchTerms: [msg("beta link another machine vps peer agents work there delegate")],
-  },
-  {
     id: "workflows-beta",
     title: msg("Workflows"),
     to: "/settings/labs",
@@ -1484,7 +1477,7 @@ export const SETTINGS_SEARCH_ITEMS = [
     id: "remote-environments",
     title: msg("Environments"),
     to: "/settings/connections",
-    searchTerms: [msg("add pair backend host code ssh config agent tunnel saved t3 connect")],
+    searchTerms: [msg("add pair backend host code saved lan tailscale")],
   },
   {
     id: "load-balancing",

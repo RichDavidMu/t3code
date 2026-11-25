@@ -42,8 +42,6 @@ interface Setup {
   /** T3 Connect revoked the link; `t3 connect` links again. */
   readonly connectRevoked: boolean;
   readonly lan: boolean;
-  /** An installed service with no T3CODE_LAN or T3CODE_HOST keeps the old default: on. */
-  readonly lanFromOldDefault: boolean;
   readonly host: string | undefined;
 }
 
@@ -79,14 +77,12 @@ const readSetup = Effect.fn("cli.up.read_setup")(function* () {
         revoked: connectRevoked,
       })
     : null;
-  // Another home's service doesn't read this home's service.env.
-  const servesThisHome = service.installed && service.otherBaseDir === undefined;
   return {
     service,
     connect,
     connectRevoked,
-    lan: Option.getOrElse(lan, () => servesThisHome),
-    lanFromOldDefault: Option.isNone(lan) && servesThisHome && entries.T3CODE_HOST === undefined,
+    // The server's own default, so an unset value reads as on.
+    lan: Option.getOrElse(lan, () => true),
     host: entries.T3CODE_HOST,
   } satisfies Setup;
 });
@@ -178,21 +174,18 @@ const formatSetup = (setup: Setup, hints: Hints) => {
       "Local network",
       setup.host !== undefined
         ? `overridden · T3CODE_HOST=${setup.host}`
-        : setup.lanFromOldDefault
-          ? "on · kept from an older install"
-          : setup.lan
-            ? "on · pairing code only"
-            : "off",
+        : setup.lan
+          ? "on · pairing code only"
+          : "off",
     ],
   ];
-  const notes = [
-    ...(setup.host === undefined && setup.lan
-      ? ["Anyone on your LAN or tailnet can reach the port. A pairing code is the only lock."]
-      : []),
-    ...(setup.lanFromOldDefault
-      ? [`Older installs keep LAN access on. Turn it off: \`${hints.upNoLan}\`.`]
-      : []),
-  ];
+  const notes =
+    setup.host === undefined && setup.lan
+      ? [
+          "Anyone on your LAN or tailnet can reach the port. A pairing code is the only lock.",
+          `Turn it off: \`${hints.upNoLan}\`.`,
+        ]
+      : [];
   return [
     ...rows.map(([label, value]) => `  ${label.padEnd(15)}${value}`),
     ...(notes.length === 0 ? [] : ["", ...notes]),
@@ -471,7 +464,7 @@ export const upCommand = Command.make("up", {
   ),
   yes: Flag.Boolean("yes").pipe(
     Flag.withDescription(
-      "Ask nothing. Keep the access settings; a new machine gets T3 Connect. A restart stops running agent turns.",
+      "Ask nothing. Keep the access settings; a new machine gets local network access. A restart stops running agent turns.",
     ),
     Flag.withDefault(false),
   ),
@@ -483,7 +476,6 @@ export const upCommand = Command.make("up", {
   ),
   Command.withExamples([
     { command: "t3 up", description: "Choose remote access." },
-    { command: "t3 up --connect", description: "Turn on T3 Connect. Keep other settings." },
     { command: "t3 up --lan", description: "Allow LAN access with pairing codes." },
     { command: "t3 up --no-lan", description: "Stop LAN access." },
     { command: "t3 up --yes", description: "Take the defaults with no questions." },
@@ -521,7 +513,6 @@ const setupJson = (setup: Setup) =>
         setup.connect === null ? null : { enabled: setup.connect, revoked: setup.connectRevoked },
       lan: {
         enabled: setup.lan,
-        inheritedDefault: setup.lanFromOldDefault,
         hostOverride: setup.host ?? null,
       },
     },

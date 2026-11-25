@@ -181,6 +181,18 @@ describe("DesktopServerExposure", () => {
     );
   });
 
+  it.effect("starts network-accessible by default", () =>
+    withHarness(
+      lanNetworkInterfaces,
+      Effect.gen(function* () {
+        const serverExposure = yield* DesktopServerExposure.DesktopServerExposure;
+        const state = yield* serverExposure.configureFromSettings({ port: 4173 });
+        assert.equal(state.mode, "network-accessible");
+        assert.equal((yield* serverExposure.backendConfig).bindHost, "0.0.0.0");
+      }),
+    ),
+  );
+
   it.effect("falls back to local-only without losing the requested network preference", () =>
     withHarness(
       emptyNetworkInterfaces,
@@ -245,6 +257,7 @@ describe("DesktopServerExposure", () => {
         const settings = yield* DesktopAppSettings.DesktopAppSettings;
 
         yield* settings.load;
+        yield* settings.setServerExposureMode("local-only");
         yield* serverExposure.configureFromSettings({ port: 4173 });
 
         const change = yield* serverExposure.setMode("network-accessible");
